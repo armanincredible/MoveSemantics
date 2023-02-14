@@ -10,6 +10,8 @@
             fprintf (log_file_, (f_), ##__VA_ARGS__);   \
         }while(0)
 
+#define PRINT_FILE_WITHOUT_SPACES_(f_, ...) fprintf (log_file_, (f_), ##__VA_ARGS__)
+
 #define INITED_CHECK_(ret)              \
         do{                             \
             if (inited_ != 1)           \
@@ -67,22 +69,60 @@ void Logger::LogFunctionEnd()
     PRINT_FILE_("}\n");
 }
 
-void Logger::LogVaribaleValue(const Int& var)
+void Logger::LogUnicNodeName(const Int& var)
 {
     INITED_CHECK_();
-    
-}
-void Logger::LogVaribaleName(const Int& var)
-{
-    INITED_CHECK_();
-}
-void Logger::LogVaribalePointer(const Int& var)
-{
-    INITED_CHECK_();
+    PRINT_FILE_WITHOUT_SPACES_("INFO%s%p%d ", var.get_name().c_str(), (void*)&var, var.assign_number);
 }
 
 void Logger::LogVariable(const Int& var)
 {
     INITED_CHECK_();
-    PRINT_FILE_("INFO%p [shape = record, label = \"<name> %s %s\"];\n", (void*)&var, var.get_name().c_str(),var.get_history().c_str());
+    PRINT_FILE_(" ");
+    LogUnicNodeName(var);
+    PRINT_FILE_WITHOUT_SPACES_("[shape = record, ");
+
+    if (!var.is_real_var())
+    {
+        PRINT_FILE_WITHOUT_SPACES_("color = red, style=\"rounded,filled\", ");
+    }
+
+    PRINT_FILE_WITHOUT_SPACES_("label = \"<name> %s %s\"];\n", var.get_name().c_str(), var.get_history().c_str());
+
+}
+
+void Logger::LogArrow(const Int& from, const Int& to, const std::string& name)
+{
+    INITED_CHECK_();
+    PRINT_FILE_(" ");
+    LogUnicNodeName(from);
+    PRINT_FILE_WITHOUT_SPACES_(": <name> -> ");
+    LogUnicNodeName(to);
+    PRINT_FILE_WITHOUT_SPACES_(": <name> [label = \" %s \", ]\n", name.c_str());
+}
+
+void Logger::LogArrows(const Int& from1, const Int& from2, const Int& into, const std::string& name)
+{
+    INITED_CHECK_();
+    LogArrow(from1, into, name);
+    LogArrow(from2, into, name);
+}
+
+void Logger::LogAssignArrow(Int& from, Int& to, const std::string& name)
+{
+    INITED_CHECK_();
+    PRINT_FILE_(" ");
+    to.assign_number -= 1;
+    LogUnicNodeName(from);
+    PRINT_FILE_WITHOUT_SPACES_(": <name> -> ");
+    to.assign_number += 1;
+    LogUnicNodeName(to);
+    PRINT_FILE_WITHOUT_SPACES_(": <name> [label = \" %s \", ]\n", name.c_str());
+}
+
+void Logger::LogAssignArrows(Int& from1, const Int& from2,const std::string& name)
+{
+    INITED_CHECK_();
+    LogAssignArrow(from1, from1, name);
+    LogArrow(from2, from1, name);
 }
